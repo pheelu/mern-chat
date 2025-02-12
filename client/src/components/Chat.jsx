@@ -2,7 +2,7 @@ import { useEffect, useState, useContext, useRef } from 'react';
 import Avatar from './Avatar';
 import Logo from './Logo';
 import { UserContext } from '../UserContext';
-import { uniqBy } from 'lodash';
+import { set, uniqBy } from 'lodash';
 import { use } from 'react';
 import axios from 'axios'
 
@@ -37,7 +37,9 @@ const Chat = () => {
 
     useEffect(() => {
         if (selectedUserId) {
-            axios.get('/messages/'+selectedUserId).then()
+            axios.get('/messages/'+selectedUserId).then(res => {
+                setMessages(res.data);
+            })
         }
     }, [selectedUserId]);
 
@@ -73,13 +75,13 @@ const Chat = () => {
             text: newMessageText,
             sender: id,
             recipient: selectedUserId,
-            id: Date.now(),
+            _id: Date.now(),
         }]));
     }
 
     const onlinePeopleExclMe = { ...onlinePeople };
     delete onlinePeopleExclMe[id];
-    const messagesWithoutDupes = uniqBy(messages, 'id');
+    const messagesWithoutDupes = uniqBy(messages, '_id');
 
     return (
         <div className="flex h-screen">
