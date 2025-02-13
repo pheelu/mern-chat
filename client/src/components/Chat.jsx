@@ -1,6 +1,7 @@
 import { useEffect, useState, useContext, useRef } from 'react';
 import Avatar from './Avatar';
 import Logo from './Logo';
+
 import { UserContext } from '../UserContext';
 import { set, uniqBy } from 'lodash';
 import { use } from 'react';
@@ -44,7 +45,7 @@ const Chat = () => {
     }, [selectedUserId]);
 
     function scrollToBottom() {
-        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end', inline: 'nearest' });
     }
 
     function showOnlinePeople(peopleArray) {
@@ -84,7 +85,7 @@ const Chat = () => {
     const messagesWithoutDupes = uniqBy(messages, '_id');
 
     return (
-        <div className="flex h-screen">
+        <div className="flex h-screen overflow-hidden">
             <div className="bg-white w-1/3 border-r border-gray-200">
                 <Logo />
                 {Object.keys(onlinePeopleExclMe).map((userId) => (
@@ -108,8 +109,8 @@ const Chat = () => {
                 ))}
             </div>
 
-            <div className="flex flex-col bg-blue-50 w-2/3 p-4">
-                <div className="flex-grow overflow-y-auto">
+            <div className="flex flex-col bg-blue-50 w-2/3 p-4 overflow-hidden">
+                <div className="flex-grow overflow-y-auto overflow-x-hidden">
                     {!selectedUserId && (
                         <div className="flex items-center justify-center h-full text-2xl text-gray-500 font-light">
                             Select a user to chat
