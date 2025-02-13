@@ -1,4 +1,4 @@
-export default function Avatar({ username, userId }) {
+export default function Avatar({ username, userId, online }) {
     const colors = [
         'bg-gradient-to-r from-red-400 to-pink-400',
         'bg-gradient-to-r from-blue-400 to-indigo-400',
@@ -36,14 +36,22 @@ export default function Avatar({ username, userId }) {
             style={{
                 boxShadow: `0px 4px 6px rgba(${parseInt(shadowColor.slice(1, 3), 16)}, ${parseInt(shadowColor.slice(3, 5), 16)}, ${parseInt(shadowColor.slice(5, 7), 16)}, 0.4)`
             }}
+            
         >
+            
             <div className="text-center text-2xl font-bold text-white">
-                {username[0].toUpperCase()}
+                {username?.[0]?.toUpperCase()}
             </div>
-
+            
             <div className="absolute bottom-0 right-0 -translate-x-1/2 translate-y-1/2 text-3xl">
                 {emoji}
             </div>
+            {online && (
+                <div className="absolute bottom-0 right-0 w-4 h-4 bg-green-400 rounded-full border border-white"></div>
+            )}
+            {!online && (
+                <div className="absolute bottom-0 right-0 w-4 h-4 bg-gray-400 rounded-full border border-white"></div>
+            )}
         </div>
     );
 }

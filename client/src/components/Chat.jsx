@@ -1,5 +1,5 @@
 import { useEffect, useState, useContext, useRef } from 'react';
-import Avatar from './Avatar';
+import Contact from './Contact';
 import Logo from './Logo';
 
 import { UserContext } from '../UserContext';
@@ -10,6 +10,7 @@ import axios from 'axios'
 const Chat = () => {
     const [ws, setWs] = useState(null);
     const [onlinePeople, setOnlinePeople] = useState({});
+    const [offlinePeople, setOfflinePeople] = useState({});
     const [selectedUserId, setSelectedUserId] = useState(null);
     const [newMessageText, setNewMessageText] = useState('');
     const [messages, setMessages] = useState([]);
@@ -35,6 +36,20 @@ const Chat = () => {
     useEffect(() => {
         scrollToBottom();
     }, [messages]);
+
+    useEffect(() => {
+        axios.get('/people').then(res => {
+            const offlinePeopleArr = res.data
+                .filter(p => p._id !== id)
+                .filter(p => !Object.keys(onlinePeople).includes(p._id));
+            const offlinePeople = {};
+            offlinePeopleArr.forEach(p => {
+                offlinePeople[p._id] = p;
+            });
+            setOfflinePeople(offlinePeople);
+        });
+
+    }, [onlinePeople]);
 
     useEffect(() => {
         if (selectedUserId) {
@@ -89,23 +104,22 @@ const Chat = () => {
             <div className="bg-white w-1/3 border-r border-gray-200">
                 <Logo />
                 {Object.keys(onlinePeopleExclMe).map((userId) => (
-                    <div
-                        key={userId}
-                        onClick={() => setSelectedUserId(userId)}
-                        className={`cursor-pointer border-b border-gray-200 flex items-center gap-2 px-4 py-3 transition-colors ${
-                            userId === selectedUserId ? 'bg-blue-100' : 'hover:bg-gray-100'
-                        }`}
-                    >
-                        {userId === selectedUserId && (
-                            <div className="w-1 bg-blue-500 h-10 rounded-r-md"></div>
-                        )}
-                        <div className="flex items-center gap-3">
-                            <Avatar username={onlinePeople[userId]} userId={userId} />
-                            <span className="text-gray-800 font-medium">
-                                {onlinePeople[userId] || 'Unknown User'}
-                            </span>
-                        </div>
-                    </div>
+                    <Contact 
+                        key = {userId}
+                        id={userId} 
+                        online = {true}
+                        username={onlinePeopleExclMe[userId]} 
+                        selected={selectedUserId === userId}
+                        onClick={() => setSelectedUserId(userId)}  />
+                ))}
+                {Object.keys(offlinePeople).map((userId) => (
+                    <Contact 
+                        key = {userId}
+                        id={userId} 
+                        online = {false}
+                        username={offlinePeople[userId].username} 
+                        selected={selectedUserId === userId}
+                        onClick={() => setSelectedUserId(userId)}/>
                 ))}
             </div>
 

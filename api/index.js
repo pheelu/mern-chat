@@ -58,12 +58,17 @@ app.get('/messages/:userId', async (req, res) => {
   const userData = await getUserDataFromRequest(req);
   const ourUserId = userData.userId;
   const messages = await Message.find({
-    sender:{$in:[ourUserId,userId]},
-    recipient:{$in:[ourUserId,userId]}
-  }).sort({createdAt: 1})
+    sender: { $in: [ourUserId, userId] },
+    recipient: { $in: [ourUserId, userId] }
+  }).sort({ createdAt: 1 })
     .exec();
   res.json(messages);
 
+});
+
+app.get('/people', async (req, res) => {
+  const users = await User.find({}, { '_id': 1, 'username': 1 });
+  res.json(users);
 });
 
 app.get('/profile', (req, res) => {
@@ -119,6 +124,31 @@ const server = app.listen(4040, () => console.log('Server running on port 4040')
 const wss = new WebSocketServer({ server }); // Usa la classe importata direttamente
 //read username and userId from the cookie
 wss.on('connection', (connection, req) => {
+
+  function notifyAboutOnlinePeople() {
+    // Invia la lista degli utenti online a tutti i client
+    [...wss.clients].forEach(client => {
+      client.send(JSON.stringify({
+        online: [...wss.clients].map(c => ({ userId: c.userId, username: c.username })),
+      }));
+    });
+  }
+
+  connection.isAlive = true;
+
+  connection.timer = setInterval(() => {
+    connection.ping();
+    connection.deathTimer = setTimeout(() => {
+      connection.isAlive = false;
+      connection.terminate();
+      notifyAboutOnlinePeople();
+    }, 1000);
+  }, 5000);
+
+  connection.on('pong', () => {
+    clearTimeout(connection.deathTimer);
+  });
+
   const cookies = req.headers.cookie;
   if (cookies) {
     const tokenCookieString = cookies.split(';').find(str => str.startsWith('token='));
@@ -154,13 +184,5 @@ wss.on('connection', (connection, req) => {
     }
   });
 
-
-  // Invia la lista degli utenti online a tutti i client
-  [...wss.clients].forEach(client => {
-    client.send(JSON.stringify({
-      online: [...wss.clients].map(c => ({ userId: c.userId, username: c.username })),
-    }));
-
-  });
-
+  notifyAboutOnlinePeople();
 });
