@@ -14,7 +14,7 @@ const Chat = () => {
     const [selectedUserId, setSelectedUserId] = useState(null);
     const [newMessageText, setNewMessageText] = useState('');
     const [messages, setMessages] = useState([]);
-    const { username, id } = useContext(UserContext);
+    const { username, id, setId, setUsername } = useContext(UserContext);
     const messagesEndRef = useRef(null);
 
     useEffect(() => {
@@ -53,7 +53,7 @@ const Chat = () => {
 
     useEffect(() => {
         if (selectedUserId) {
-            axios.get('/messages/'+selectedUserId).then(res => {
+            axios.get('/messages/' + selectedUserId).then(res => {
                 setMessages(res.data);
             })
         }
@@ -80,6 +80,15 @@ const Chat = () => {
         }
     }
 
+    function logout() {
+        axios.post('/logout').then(() => {
+            setWs(null);
+            setId(null);
+            setUsername(null);
+        });
+    }
+
+
     function sendMessage(ev) {
         ev.preventDefault();
         ws.send(JSON.stringify({
@@ -101,26 +110,46 @@ const Chat = () => {
 
     return (
         <div className="flex h-screen overflow-hidden">
-            <div className="bg-white w-1/3 border-r border-gray-200">
-                <Logo />
-                {Object.keys(onlinePeopleExclMe).map((userId) => (
-                    <Contact 
-                        key = {userId}
-                        id={userId} 
-                        online = {true}
-                        username={onlinePeopleExclMe[userId]} 
-                        selected={selectedUserId === userId}
-                        onClick={() => setSelectedUserId(userId)}  />
-                ))}
-                {Object.keys(offlinePeople).map((userId) => (
-                    <Contact 
-                        key = {userId}
-                        id={userId} 
-                        online = {false}
-                        username={offlinePeople[userId].username} 
-                        selected={selectedUserId === userId}
-                        onClick={() => setSelectedUserId(userId)}/>
-                ))}
+            <div className="bg-white w-1/3 border-r border-gray-200 flex flex-col h-screen">
+                <div className="flex-grow overflow-auto">
+                    <Logo />
+                    {Object.keys(onlinePeopleExclMe).map((userId) => (
+                        <Contact
+                            key={userId}
+                            id={userId}
+                            online={true}
+                            username={onlinePeopleExclMe[userId]}
+                            selected={selectedUserId === userId}
+                            onClick={() => setSelectedUserId(userId)}
+                        />
+                    ))}
+                    {Object.keys(offlinePeople).map((userId) => (
+                        <Contact
+                            key={userId}
+                            id={userId}
+                            online={false}
+                            username={offlinePeople[userId].username}
+                            selected={selectedUserId === userId}
+                            onClick={() => setSelectedUserId(userId)}
+                        />
+                    ))}
+                </div>
+
+                {/* Sezione profilo e logout */}
+                <div className="p-4 border-t border-gray-200 flex items-center justify-between">
+                    <div className="flex items-center space-x-2 text-sm text-gray-800 font-medium">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6">
+                            <path fillRule="evenodd" d="M7.5 6a4.5 4.5 0 1 1 9 0 4.5 4.5 0 0 1-9 0ZM3.751 20.105a8.25 8.25 0 0 1 16.498 0 .75.75 0 0 1-.437.695A18.683 18.683 0 0 1 12 22.5c-2.786 0-5.433-.608-7.812-1.7a.75.75 0 0 1-.437-.695Z" clipRule="evenodd" />
+                        </svg>
+                        <span>{username}</span>
+                    </div>
+
+                    <button
+                        onClick={logout}
+                        className="text-white bg-blue-600 px-4 py-2 rounded-lg shadow-sm hover:bg-blue-700 transition">
+                        Logout
+                    </button>
+                </div>
             </div>
 
             <div className="flex flex-col bg-blue-50 w-2/3 p-4 overflow-hidden">
@@ -138,9 +167,8 @@ const Chat = () => {
                                     className={`flex ${message.sender === id ? 'justify-end' : 'justify-start'}`}
                                 >
                                     <div
-                                        className={`max-w-[75%] px-4 py-2 rounded-lg shadow-sm text-sm ${
-                                            message.sender === id ? 'bg-blue-500 text-white' : 'bg-white text-gray-700'
-                                        }`}
+                                        className={`max-w-[75%] px-4 py-2 rounded-lg shadow-sm text-sm ${message.sender === id ? 'bg-blue-500 text-white' : 'bg-white text-gray-700'
+                                            }`}
                                     >
                                         {message.text}
                                     </div>
@@ -162,7 +190,7 @@ const Chat = () => {
                         />
                         <button
                             type="submit"
-                            className="bg-blue-500 text-white px-4 py-2 rounded-lg shadow-sm hover:bg-blue-600 transition"
+                            className="bg-blue-600 text-white px-4 py-2 rounded-lg shadow-sm hover:bg-white hover:text-blue-600 transition"
                         >
                             <svg
                                 xmlns="http://www.w3.org/2000/svg"

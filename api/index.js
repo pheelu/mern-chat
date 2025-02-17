@@ -98,6 +98,10 @@ app.post('/login', async (req, res) => {
   }
 });
 
+app.post('/logout', (req, res) => {
+  res.cookie('token', '', { sameSite: 'none', secure: true }).json('ok');
+});
+
 app.post('/register', async (req, res) => {
   const { username, password } = req.body;
 
@@ -126,10 +130,9 @@ const wss = new WebSocketServer({ server }); // Usa la classe importata direttam
 wss.on('connection', (connection, req) => {
 
   function notifyAboutOnlinePeople() {
-    // Invia la lista degli utenti online a tutti i client
     [...wss.clients].forEach(client => {
       client.send(JSON.stringify({
-        online: [...wss.clients].map(c => ({ userId: c.userId, username: c.username })),
+        online: [...wss.clients].map(c => ({userId:c.userId,username:c.username})),
       }));
     });
   }
@@ -140,8 +143,10 @@ wss.on('connection', (connection, req) => {
     connection.ping();
     connection.deathTimer = setTimeout(() => {
       connection.isAlive = false;
+      clearInterval(connection.timer);
       connection.terminate();
       notifyAboutOnlinePeople();
+      console.log('dead');
     }, 1000);
   }, 5000);
 
